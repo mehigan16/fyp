@@ -31,15 +31,7 @@ def compute_stats(df):
     d={'mean_mag_JJY': mean_mag_JJY,'mean_phase_JJY': mean_phase_JJY,
        'disp_mag_JJY': disp_mag_JJY,'disp_phase_JJY': disp_phase_JJY}
     stats_df=pd.DataFrame(data=d,index=days)
-    print(stats_df.index)
+    return stats_df
 #collumn_names=[['M_nwc','D_nwc','M_npm','D_npm','M_jji','D_jji','M_jjy','D_jjy']]
-stats_data=[]*4
 
-
-compute_stats(All_night_data)
-
-
-
-#df=pd.Dataframe(collumns=collumn_names)
-
-
+stats_df=compute_stats(All_night_data) #Uses DF already in the workspace from main.py
