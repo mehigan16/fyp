@@ -3,15 +3,13 @@
 """
 Created on Tue Nov 28 21:54:12 2017
 
+A module to compute the stats for the mean and displacement of the JJY
+amplitude and phase signals
 @author: isaacmehigan
 """
 
-#Test creation of dataframe
-
-
 import pandas as pd
 import statistics as stat
-import datetime
 
 def compute_stats(df):
     days=[]
@@ -32,6 +30,3 @@ def compute_stats(df):
        'disp_mag_JJY': disp_mag_JJY,'disp_phase_JJY': disp_phase_JJY}
     stats_df=pd.DataFrame(data=d,index=days)
     return stats_df
-#collumn_names=[['M_nwc','D_nwc','M_npm','D_npm','M_jji','D_jji','M_jjy','D_jjy']]
-
-stats_df=compute_stats(All_night_data) #Uses DF already in the workspace from main.py

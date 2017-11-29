@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 import datetime
 import numpy as np
 from scipy import stats
+from compute_stats import compute_stats
 
 ##Plot figures in a new window
 #from IPython import get_ipython
@@ -50,25 +51,6 @@ def add_date_col(data,start_date):
     data2=data.set_index('time')
     return data2
 
-def compute_stats(df):
-    days=[]
-    mean_mag_JJY=[]
-    disp_mag_JJY=[]
-    mean_phase_JJY=[]
-    disp_phase_JJY=[]
-    DFList = []
-    for group in df.groupby(df.index.day):
-        DFList.append(group[1])
-    for day in DFList:
-        days.append(day.index[0].date())
-        mean_mag_JJY.append(stat.mean(day['A_jjy']))
-        mean_phase_JJY.append(stat.mean(day['P_jjy']))
-        disp_mag_JJY.append(stat.pvariance(day['A_jjy']))
-        disp_phase_JJY.append(stat.pvariance(day['P_jjy']))
-    d={'mean_mag_JJY': mean_mag_JJY,'mean_phase_JJY': mean_phase_JJY,
-       'disp_mag_JJY': disp_mag_JJY,'disp_phase_JJY': disp_phase_JJY}
-    stats_df=pd.DataFrame(data=d,index=days)
-    return stats_df
 
 #------------------------------------------------------------
 
