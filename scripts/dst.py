@@ -34,24 +34,40 @@ import plotly.graph_objs as go
 import datetime
 
 #Functions--------------------------------------------------
-def indexcol2date(data):
-    dst_dates=data.ilo
-    s_d=dst_dates[0].replace("DST","").replace("*","")
-    year=2000+int(s_d[0:2])
-    mon=int(s_d[2:4])
-    day=int(s_d[4:6])
-    date=datetime.datetime(year, mon, day)
-    return date
 
-def add_date_col(data,start_date):
-    length=len(data.index)
-    tmp=data.index
-#    start_date=filename2date(file)
+def add_date_col(df):
+    """ Function to add the timestamp for the file as the index col
+    """
+    date_format='DST%y%m*%d'
+    start_date=datetime.datetime.strptime(df.iloc[0][0],date_format)
+    length=len(df.index)
+    tmp=df.index
     rng=pd.date_range(start_date,freq='1d',periods=length)
-    data['time']=rng
-    data['num']=tmp
-    data2=data.set_index('time')
-    return data2
+    df['time']=rng
+    df['num']=tmp
+    df2=df.set_index('time')
+    return df2
+
+def condition(df):  
+    """ Function to condition the dst data to remove non values and to make
+    a long list of data for each hour slot at night
+    """
+    values=[]
+    start_date=df.index[0]
+    length=len(df.index)*24
+    rng=pd.date_range(start_date,freq='1h',periods=length)
+    d={'num':range(0,length,1)}
+#    d=pd.Series()
+#    df=df.fillna(-50)
+#    df=df.fillna(method='pad', limit=1)
+
+    df2=pd.DataFrame(data=d, index=rng, columns=None, dtype=None, copy=False)
+    for y in range(0,len(df.index)):
+        for value in df.iloc[y][3:27].tolist():
+            values.append(value)        
+    df2['dst']=values
+    df3=df2.between_time('18:00','8:00')
+    return df3.fillna(-100)
 
 def add_dst_index(data,filename):
     split=filename.split('-')
@@ -65,7 +81,7 @@ def add_dst_index(data,filename):
     return data2
 
 #------------------------------------------------------------
-file="dst-2004-01-01-year.dat"
+file="dst_2004-01-01_2007-12-31.dat"
 colNames=['DST_name','Version','Base_value','1','2','3','4','5','6','7','8','9','10',
           '11','12','13','14','15','16','17','18','19','20','21','22','23','24','avg']
 
@@ -78,8 +94,8 @@ dst_data = pd.read_csv("../dst/"+file,
                        header=None,
                        skiprows=0
                        )
-#dst_data2=add_date_col(dst_data,indexcol2date(dst_data))
-dst_data=add_dst_index(dst_data,file)
+
+dst_data=add_date_col(dst_data)
 
 def to_unix_time(dt):
     epoch =  datetime.datetime.utcfromtimestamp(0)
