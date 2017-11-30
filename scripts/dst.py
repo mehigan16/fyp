@@ -65,9 +65,11 @@ def condition(df):
     for y in range(0,len(df.index)):
         for value in df.iloc[y][3:27].tolist():
             values.append(value)        
-    df2['dst']=values
+    df2['dst_raw']=values
     df3=df2.between_time('18:00','8:00')
-    return df3.fillna(-100)
+    df4=df3.fillna(-100)
+    df5=fix_string_values(df4)
+    return df5
 
 def load(file):
     """ Function to load the dst data into a dataframe
@@ -85,6 +87,23 @@ def load(file):
 
     dst_data=add_date_col(dst_data)
     return dst_data
+
+def fix_string_values(df):
+    """ Function to take the raw non strings and convert to -100 value
+    Note: there were 16 in the 2004-2007 data
+    """
+    values=[]
+    for value in df['dst_raw']:
+        if type(value) is str:
+            if len(value.split('-')) > 2:
+                values.append(-100)
+            else:
+                values.append(value)
+        else:
+            values.append(value)
+    df['dst']=values
+    df['dst']=pd.to_numeric(df['dst'])
+    return df
     
 #------------------------------------------------------------
 file="dst_2004-01-01_2007-12-31.dat"
@@ -93,3 +112,5 @@ colNames=['DST_name','Version','Base_value','1','2','3','4','5','6','7','8','9',
 
 dst_data=load(file)
 dst_df=condition(dst_data)
+#df[df['A'] < -1.0].index.tolist()
+#over20=dst_df[dst_df['dst']>20].index.tolist()
