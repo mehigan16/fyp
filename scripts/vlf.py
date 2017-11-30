@@ -117,31 +117,3 @@ def create_hdf5(date1,date2):
     output_night_df=output_df[date1:date2].between_time('18:00','8:00')
     output_night_df.to_hdf(output_filename,'eq_df',format='table')
     print("File",output_filename.split("/")[-1],"was created")
-
-#Old rename function for reference
-def old_rename(folder):
-    months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']   
-    def month2num(name):
-        for month in months:
-            if month in name:
-                number=months.index(month)+1
-                num2=('%02.f' % number)
-                newname=name.replace(month,str(num2))
-                day=name[1:3]
-                #mon=name[3:6]
-                newname='t'+str(num2)+'-'+str(day)+'-'+name[6:]
-                return(str(newname))
-        return name
-    
-    #Standardise the name for the files
-    files=os.listdir()
-    for file in files:
-        if file.endswith('.kam') or file.endswith('.KAM'):
-            newname=file.lower()
-            newname2=month2num(newname)
-            print('new name: ' + newname2 + ' old name: ' + newname)
-            os.rename(file,newname2)
-            print(file)
-        else:
-            files.remove(file)
-            print(file+' removed from files string') 
