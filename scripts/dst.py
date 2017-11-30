@@ -69,24 +69,12 @@ def condition(df):
     df3=df2.between_time('18:00','8:00')
     return df3.fillna(-100)
 
-def add_dst_index(data,filename):
-    split=filename.split('-')
-    start_date=datetime.datetime(int(split[1]),int(split[2]),int(split[3]))
-    tmp=data.index
-    length=len(tmp)
-    rng=pd.date_range(start_date,freq='1d',periods=length)
-    data['time']=rng
-    data['num']=tmp
-    data2=data.set_index('time')
-    return data2
-
-#------------------------------------------------------------
-file="dst_2004-01-01_2007-12-31.dat"
-colNames=['DST_name','Version','Base_value','1','2','3','4','5','6','7','8','9','10',
+def load(file):
+    """ Function to load the dst data into a dataframe
+    """
+    colNames=['DST_name','Version','Base_value','1','2','3','4','5','6','7','8','9','10',
           '11','12','13','14','15','16','17','18','19','20','21','22','23','24','avg']
-
-
-dst_data = pd.read_csv("../dst/"+file,
+    dst_data = pd.read_csv("../dst/"+file,
                        sep='\s+', 
                        engine='python',
                        index_col=False,
@@ -95,10 +83,13 @@ dst_data = pd.read_csv("../dst/"+file,
                        skiprows=0
                        )
 
-dst_data=add_date_col(dst_data)
+    dst_data=add_date_col(dst_data)
+    return dst_data
+    
+#------------------------------------------------------------
+file="dst_2004-01-01_2007-12-31.dat"
+colNames=['DST_name','Version','Base_value','1','2','3','4','5','6','7','8','9','10',
+          '11','12','13','14','15','16','17','18','19','20','21','22','23','24','avg']
 
-def to_unix_time(dt):
-    epoch =  datetime.datetime.utcfromtimestamp(0)
-    return (dt - epoch).total_seconds() * 1000
-
-
+dst_data=load(file)
+dst_df=condition(dst_data)
