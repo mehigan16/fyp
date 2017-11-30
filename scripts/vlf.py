@@ -48,14 +48,76 @@ def load(year):
 #    files=os.listdir('../kam/'+year)
 #    os.chdir('../kam/'+year)    
 #    return df
-#Function to condition the vlf data. Ignoring blank data, and 
-def condition_vlf():
-    print('To be added')
-
-#Function for getting 5 day period before eq/ non-eq
-def output(df,date):
-    print('To be added')
     
+def condition(file):
+    """ Fuction to condition the data by adding collumn names and index timestamp
+    Need to add searching for zero data in the future.
+    """
+    colNames=['A_nwc','P_nwc','A_npm','P_npm','A_jji','P_jji','A_jjy','P_jjy']
+    file_name=os.path.join(os.getcwd(),file)
+    file_date=datetime.datetime.strptime(file,'%Y-%m-%d.kam')
+    data = pd.read_csv(file_name,
+                       sep='\s+', 
+                       engine='python',
+                       index_col=False,
+                       verbose=True,
+                       names=colNames,
+                       header=None,
+                       skiprows=1
+                       )
+    data=add_date_col(data,file_date)
+    return data
+    
+def add_date_col(data,start_date):
+    """ Function to add the timestamp for the file as the index col
+    """
+    length=len(data.index)
+    tmp=data.index
+    start_date=start_date-datetime.timedelta(minutes=1)
+    rng=pd.date_range(start_date,freq='20s',periods=length)
+    data['time']=rng
+    data['num']=tmp
+    data2=data.set_index('time')
+    return data2
+
+def create_hdf5(date1,date2):
+    """ Function to make a hdf5 for .kam data between 2 dates
+    Also works if only 1 date is entered, this gives data 5 days before an EQ 
+    """
+    new_format='%Y-%m-%d.kam'
+    folder="/Users/isaacmehigan/Documents/fyp/kam/data"
+    if (type(date1) is datetime.datetime):
+        print("2 arguments generating hdf5 for ",date1.strftime('%Y-%m-%d')," to ",date2.strftime('%Y-%m-%d'))
+        output_filename=(datetime.datetime.strftime(date1,'../output/%Y-%m-%d') +
+        datetime.datetime.strftime(date2,'_%Y-%m-%d.h5'))
+    else:
+        print("1 argument ",date2.strftime('%Y-%m-%d')," so generating data for 5 days before")
+        date1=date2 - datetime.timedelta(days=5)
+        output_filename=datetime.datetime.strftime(date1,'../output/eq_%Y-%m-%d.h5')
+    
+    date_0=datetime.datetime(2004,2,14) #set lowest date allowed
+    date_n=datetime.datetime(2007,12,31) #set highest date allowed
+    
+    if not ((date_0 < date1 < date_n) or (date_0 < date2 < date_n)):
+        print("Dates are outside of data range")
+    else:
+        print("Dates are within data range")
+    output_df=[]
+    os.chdir(folder)
+#        files=os.listdir(folder)
+    numdays=(date2-date1).days + 2 #To include the first 3 samples for date2
+    date_list = [date1 + datetime.timedelta(days=x) for x in range(0, numdays)]
+    for date in date_list:
+        file=datetime.datetime.strftime(date,new_format)
+        df=condition(file)
+        output_df.append(df)
+    output_df=pd.concat(output_df)
+    num=len(output_df.index)
+    output_df['num']=range(0,num)
+    output_night_df=output_df[date1:date2].between_time('18:00','8:00')
+    output_night_df.to_hdf(output_filename,'eq_df',format='table')
+    print("File",output_filename.split("/")[-1],"was created")
+
 #Old rename function for reference
 def old_rename(folder):
     months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']   
