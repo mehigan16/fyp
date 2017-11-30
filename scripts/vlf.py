@@ -43,11 +43,10 @@ def rename(folder):
 
 #Function to load the year of data being used and return a pandas dataframe of the data
 def load(year):
-    files=os.listdir('../kam/'+year)
-    os.chdir('../kam/'+year)
-    
-    
-    return df
+    print('To be added')
+#    files=os.listdir('../kam/'+year)
+#    os.chdir('../kam/'+year)    
+#    return df
 #Function to condition the vlf data. Ignoring blank data, and 
 def condition_vlf():
     print('To be added')
