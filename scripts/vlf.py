@@ -11,6 +11,7 @@ Created on Wed Nov 29 12:21:07 2017
 import os
 import re
 import datetime
+from time import strptime
 import pandas as pd
 
 
