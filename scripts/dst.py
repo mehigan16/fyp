@@ -104,7 +104,19 @@ def fix_string_values(df):
     df['dst']=values
     df['dst']=pd.to_numeric(df['dst'])
     return df
-    
+def find_under_threshold(threshold):
+    print("not yet done")
+
+def test_date(df,date,*threshold):
+    """ Function to check if the threshold was over on the given date uses a
+    default of -50 for the threshold if no value is given
+    """
+    if not threshold:
+        threshold = -50
+    if df.loc[date].dst > threshold:
+        return 1
+    else:
+        return 0
 #------------------------------------------------------------
 file="dst_2004-01-01_2007-12-31.dat"
 colNames=['DST_name','Version','Base_value','1','2','3','4','5','6','7','8','9','10',
