@@ -88,12 +88,12 @@ def create_hdf5(date1,date2):
     folder="/Users/isaacmehigan/Documents/fyp/kam/data"
     if (type(date1) is datetime.datetime):
         print("2 arguments generating hdf5 for ",date1.strftime('%Y-%m-%d')," to ",date2.strftime('%Y-%m-%d'))
-        output_filename=(datetime.datetime.strftime(date1,'../output/%Y-%m-%d') +
+        output_filename=(datetime.datetime.strftime(date2,'../output/%Y-%m-%d') +
         datetime.datetime.strftime(date2,'_%Y-%m-%d.h5'))
     else:
         print("1 argument ",date2.strftime('%Y-%m-%d')," so generating data for 5 days before")
         date1=date2 - datetime.timedelta(days=5)
-        output_filename=datetime.datetime.strftime(date1,'../output/eq_%Y-%m-%d.h5')
+        output_filename=datetime.datetime.strftime(date2,'../output/eq_%Y-%m-%d.h5')
     
     date_0=datetime.datetime(2004,2,14) #set lowest date allowed
     date_n=datetime.datetime(2007,12,31) #set highest date allowed
