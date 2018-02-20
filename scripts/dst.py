@@ -25,6 +25,9 @@ COLUMN	FORMAT	SHORT DESCRIPTION
 First data is for the first hour of the day, and Last data is for the last hour of the day.
 117-120	I4	Daily mean value, unit 1 nT. Value 9999 for the missing data.
 
+Fixed initial issue with a find "(\d)-" and replace "\1 -"
+
+
 """
 
 import pandas as pd
@@ -56,20 +59,44 @@ def condition(df):
     start_date=df.index[0]
     length=len(df.index)*24
     rng=pd.date_range(start_date,freq='1h',periods=length)
-    d={'num':range(0,length,1)}
+#    d={'num':range(0,length,1)}
 #    d=pd.Series()
 #    df=df.fillna(-50)
 #    df=df.fillna(method='pad', limit=1)
 
-    df2=pd.DataFrame(data=d, index=rng, columns=None, dtype=None, copy=False)
+#    df2=pd.DataFrame(data=d, index=rng, columns=None, dtype=None, copy=False)
     for y in range(0,len(df.index)):
-        for value in df.iloc[y][3:27].tolist():
-            values.append(value)        
-    df2['dst_raw']=values
-    df3=df2.between_time('18:00','8:00')
-    df4=df3.fillna(-100)
-    df5=fix_string_values(df4)
-    return df5
+        tmp_list=df.iloc[y][3:27].tolist()
+        day_values=[]
+        for value in tmp_list:
+            day_values.append(value)
+#            if type(value) is str:
+#                if 'n' in value:
+#                    continue  
+#                if len(value.split('-')) > 2:
+#                    for entry in value.split('-')[1:]:
+#                        entry='-'+entry
+#                        day_values.append(entry)
+#    #                values.append(-100)
+#                else:
+#                    day_values.append(value)
+##            elif value==999:
+##                continue
+#            else:
+#                day_values.append(value)
+#        if len(day_values) is 26:
+#            day_values.pop()
+##            print("bad")
+#        if len(day_values) is not 25: 
+#            print(day_values)
+        values.extend(day_values)        
+    df2=pd.DataFrame(data=values, index=rng, columns=["dst"], dtype=None, copy=False)
+    
+#    df2['dst']=values
+#    df3=df2.between_time('18:00','8:00')
+#    df4=df2.fillna(999)
+#    df5=fix_string_values(df4)
+    return df2
 
 def load(file):
     """ Function to load the dst data into a dataframe
@@ -95,10 +122,17 @@ def fix_string_values(df):
     values=[]
     for value in df['dst_raw']:
         if type(value) is str:
+#            if 'n' in value:
+#                continue  
             if len(value.split('-')) > 2:
-                values.append(-100)
+                for entry in value.split('-')[1:]:
+                    entry='-'+entry
+                    values.append(entry)
+#                values.append(-100)
             else:
                 values.append(value)
+        elif value==999:
+            continue
         else:
             values.append(value)
     df['dst']=values
@@ -129,7 +163,7 @@ def test_date(df,date,*threshold):
     else:
         return 0
 #------------------------------------------------------------
-file="dst_2004-01-01_2007-12-31.dat"
+file="dst_2004-01-01_2007-12-31-fixed.dat"
 colNames=['DST_name','Version','Base_value','1','2','3','4','5','6','7','8','9','10',
           '11','12','13','14','15','16','17','18','19','20','21','22','23','24','avg']
 
