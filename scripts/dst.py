@@ -145,6 +145,8 @@ def test_date(df,date,*threshold):
     """ Function to check if the dst value was below the threshold on the
     5 days leading to the given datetime. threshold is -50 if nothing given.
     """
+    D=df.iloc[df.index.get_loc(date,method='nearest')]
+    date=D.name
     lower_date=date-datetime.timedelta(days=5)
     upper_date=date +datetime.timedelta(hours=1)
     exact_value=df.loc[date].dst
@@ -162,6 +164,9 @@ def test_date(df,date,*threshold):
         return 1
     else:
         return 0
+def save(df):
+    """ Function to save data""" 
+    df.to_hdf('../h5/dst.h5', 'dst', format = 'table', mode='w')
 #------------------------------------------------------------
 file="dst_2004-01-01_2007-12-31-fixed.dat"
 colNames=['DST_name','Version','Base_value','1','2','3','4','5','6','7','8','9','10',
@@ -171,6 +176,7 @@ dst_data=load(file)
 dst_df=condition(dst_data)
 
 date=datetime.datetime(2006,9,28,1)
-test_date(dst_df,date)
+test_date(dst_df,date,-75)
+save(dst_df)
 #df[df['A'] < -1.0].index.tolist()
 #over20=dst_df[dst_df['dst']>20].index.tolist()
