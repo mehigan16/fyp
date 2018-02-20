@@ -41,9 +41,9 @@ def test_date(df,date,*threshold):
         threshold=threshold[0]
     if minimum > threshold:
         return 1
-    elif (exact_value > threshold and average > threshold):
-#        print("Warning at least 1 value in the time range was below threshold")
-        return 1
+#    elif (exact_value > threshold and average > threshold):
+##        print("Warning at least 1 value in the time range was below threshold")
+#        return 1
     else:
         return 0
 
@@ -54,12 +54,13 @@ def test_date(df,date,*threshold):
 dst_df=pd.read_hdf("../h5/dst.h5")
 eq_df=pd.read_hdf("../h5/eq.h5")
     
-eq_candidates=[]    
+eq_df_candidates=eq_df    
 for index, eq in eq_df.iterrows():
     index.date    
     if test_date(dst_df,index):
-        print("Earthquake at " + str(index) + " is a possible candidate")
-        eq_candidates.append(eq)
+#        print("Earthquake at " + str(index) + " is a possible candidate")
+    else:
+        eq_df_candidates=eq_df_candidates.drop(index)
     
     
 #    for file in os.listdir("../h5"):
