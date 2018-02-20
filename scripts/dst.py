@@ -143,10 +143,10 @@ def find_under_threshold(threshold):
 
 def test_date(df,date,*threshold):
     """ Function to check if the dst value was below the threshold on the
-    24 hours around the given datetime. threshold is -50 if nothing given.
+    5 days leading to the given datetime. threshold is -50 if nothing given.
     """
-    lower_date=date-datetime.timedelta(hours=12)
-    upper_date=date+datetime.timedelta(hours=12)
+    lower_date=date-datetime.timedelta(days=5)
+    upper_date=date +datetime.timedelta(hours=1)
     exact_value=df.loc[date].dst
     values=df.loc[lower_date:upper_date].dst
     minimum=values.min()
@@ -158,7 +158,7 @@ def test_date(df,date,*threshold):
     if minimum > threshold:
         return 1
     elif (exact_value > threshold and average > threshold):
-        print("Warning 1 value in the 24hr range was below threshold")
+        print("Warning at least 1 value in the time range was below threshold")
         return 1
     else:
         return 0
@@ -169,5 +169,8 @@ colNames=['DST_name','Version','Base_value','1','2','3','4','5','6','7','8','9',
 
 dst_data=load(file)
 dst_df=condition(dst_data)
+
+date=datetime.datetime(2006,9,28,1)
+test_date(dst_df,date)
 #df[df['A'] < -1.0].index.tolist()
 #over20=dst_df[dst_df['dst']>20].index.tolist()
