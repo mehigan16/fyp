@@ -25,7 +25,7 @@ from random import randint
 def load():
     eq_array=[] #np.zeros((2,20))
 #    result_array = np.array([])
-    result_array2 = np.zeros(20)
+    result_array2 = np.zeros(21)
 # =============================================================================
 #     Load earthquake data
 # =============================================================================
@@ -34,10 +34,11 @@ def load():
             df=pd.read_hdf("../h5/kam/"+filename)
             stats_df=cs.compute_stats(df)
             stats_list=stats_df.values.flatten()[0:20]
+            stats_list=np.hstack((stats_list,1)) # Add target data
 #            eq_array=np.append(eq_array,stats_list,axis=1)
 #            eq_array.append(stats_list)
 #            result_array = np.append(result_array, stats_list)
-            result_array2= np.vstack((result_array2, stats_list))
+            result_array2 = np.vstack((result_array2, stats_list))
 #            i=i+1
 #            eq_array=[eq_array;stats_list]
 # =============================================================================
@@ -48,14 +49,16 @@ def load():
             df=pd.read_hdf("../h5/control/"+filename)
             stats_df=cs.compute_stats(df)
             stats_list=stats_df.values.flatten()[0:20]
+            stats_list=np.hstack((stats_list,0)) # Add target data
 #            eq_array=np.append(eq_array,stats_list,axis=1)
 #            eq_array.append(stats_list)
 #            result_array = np.append(result_array, stats_list)
-            result_array2= np.vstack((result_array2, stats_list))
+            result_array2 = np.vstack((result_array2, stats_list))
+            
 #            i=i+1
 #            eq_array=[eq_array;stats_list]
             
-    return result_array2
+    return result_array2[1:][:]
     
     print("done")
 
