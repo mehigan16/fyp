@@ -16,6 +16,7 @@ from matplotlib.colors import ListedColormap
 
 from scipy import interp
 
+from sklearn.cross_validation import KFold
 from sklearn import metrics
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -31,7 +32,7 @@ from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 names = ["Logistic Regression","Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
-         "Decision Tree", "Random Forest", "Neural Net", "AdaBoost",
+         "Decision Tree", "Random Forest", "Multi Layer Perceptron", "AdaBoost",
          "Naive Bayes"] #, "QDA"]
 
 classifiers = [
@@ -42,7 +43,7 @@ classifiers = [
     GaussianProcessClassifier(1.0 * RBF(1.0)),
     DecisionTreeClassifier(max_depth=5),
     RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
-    MLPClassifier(alpha=1,max_iter=500),
+    MLPClassifier(alpha=1,max_iter=2000),
     AdaBoostClassifier(),
     GaussianNB()]#,
     #QuadraticDiscriminantAnalysis()]
@@ -91,6 +92,59 @@ def compare_classifiers(n):
         fpr_array=np.vstack([fpr_array,fpr_list])
         tpr_array=np.vstack([tpr_array,tpr_list])
 
+def loop_classifiers():
+    for name, clf in zip(names, classifiers):
+        print('\x1b[1;31m' + name + '\x1b[0m')
+#        print(clf.get_params())
+        if hasattr(clf, "C"):
+            print(' Needs hyperparameter tuning for C')
+            tuned=optimise(clf,'C',50,X_train, X_test, y_train, y_test)
+            print("Optimal value is " + str(tuned))
+        elif hasattr(clf,"alpha"):
+            print(" Needs hyperparameter tuning for alpha")
+            tuned=optimise(clf,'alpha',50,X_train, X_test, y_train, y_test)
+            print("Optimal value is " + str(tuned))
+        else:
+            print(' no hyperparameter tuning needed')
+
+
+def optimise(clf,var,runs,X_train, X_test, y_train, y_test):
+    print("Started optimisation")
+    k_values=np.logspace(-4,5,runs)
+    auc_values=[]
+    
+    for k in k_values:
+        command="clf.set_params(" + var + "=" + str(k) + ")"
+        exec(command)
+        clf.fit(X_train, y_train)
+        y_star=clf.predict_proba(X_test)[:,1]
+        auc=metrics.roc_auc_score(y_test, y_star)
+        auc_values.append(auc)
+    
+    mx,idx = max( (auc_values[i],i) for i in range(len(auc_values)) )
+    print("Initial search complete")
+    closest=k_values[idx]
+    closest10=int(round(np.log10(closest)))
+
+    k_values=np.linspace(10**(closest10-1),10**(closest10+1),runs)
+    
+    auc_values=[]
+    
+    for k in k_values:
+        command="clf.set_params(" + var + "=" + str(k) + ")"
+        exec(command)
+        clf.fit(X_train, y_train)
+        y_star=clf.predict_proba(X_test)[:,1]
+        auc=metrics.roc_auc_score(y_test, y_star)
+        auc_values.append(auc)
+    
+    mx,idx = max( (auc_values[i],i) for i in range(len(auc_values)) )
+    
+    return k_values[idx]
+
+
+
+
 def plot_curves(tpr_array,fpr_array,auc_array):
         
         base_fpr = np.linspace(0, 1, 101)
@@ -128,10 +182,10 @@ def plot_curves(tpr_array,fpr_array,auc_array):
         plt.tight_layout()
         plt.show()
 
+#A=optimise(classifiers[7],'alpha',20,X_train, X_test, y_train, y_test)        
+loop_classifiers()        
         
-        
-        
-plot_curves(tpr_array,fpr_array,auc_array)
+#plot_curves(tpr_array,fpr_array,auc_array)
     
 #fpr_lengths=np.array([]).reshape(0,10)
 #tpr_lengths=np.array([]).reshape(0,10)
