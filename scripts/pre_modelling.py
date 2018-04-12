@@ -29,9 +29,9 @@ def load():
 # =============================================================================
 #     Load earthquake data
 # =============================================================================
-    for filename in os.listdir("../h5/kam"):
+    for filename in os.listdir("/Users/isaacmehigan/Documents/fyp/h5/kam"):
         if filename.endswith(".h5"):
-            df=pd.read_hdf("../h5/kam/"+filename)
+            df=pd.read_hdf("/Users/isaacmehigan/Documents/fyp/h5/kam/"+filename)
             stats_df=cs.compute_stats(df)
             stats_list=stats_df.values.flatten()[0:20]
             stats_list=np.hstack((stats_list,1)) # Add target data
@@ -44,9 +44,9 @@ def load():
 # =============================================================================
 # Load control data
 # =============================================================================
-    for filename in os.listdir("../h5/control"):
+    for filename in os.listdir("../h5/control_5day_auto"):
         if filename.endswith(".h5"):
-            df=pd.read_hdf("../h5/control/"+filename)
+            df=pd.read_hdf("../h5/control_5day_auto/"+filename)
             stats_df=cs.compute_stats(df)
             stats_list=stats_df.values.flatten()[0:20]
             stats_list=np.hstack((stats_list,0)) # Add target data
@@ -94,7 +94,7 @@ def create_control_hdf5(df4):
         idx2=df4.index[r-5]
         if (idx-idx2 == datetime.timedelta(days = 5)) and (r not in r_used):
             control_date=datetime.datetime(idx.year,idx.month,idx.day)
-            vlf.create_hdf5(-1,control_date,"/Users/isaacmehigan/Documents/fyp/h5/control/")
+            vlf.create_hdf5(-1,control_date,"/Users/isaacmehigan/Documents/fyp/h5/control_5day_auto/")
             r_used.append(r)
             i=i+1
         print(i)
@@ -118,30 +118,40 @@ eq_df=pd.read_hdf("../h5/eq.h5")
 
 
 #decision_df=select_control(dst_df,eq_df)
-
+##
 #create_control_hdf5(decision_df)
-X=load()
 
-dst_mean=stat.mean(dst_df.dst)
-dst_std=stat.pstdev(dst_df.dst)
+D=load()
+##np.save("./earthquake_data.np",D,allow_pickle=False)
+## Commented out 12.04.18
+np.savetxt("earthquake_data-auto.csv", D, delimiter=",")
+#
+#
 
-threshold=dst_mean-(2*dst_std)
-
-   
-eq_df_candidates=eq_df    
-for index, eq in eq_df.iterrows():
-    eq_date=datetime.datetime(index.year,index.month,index.day)
-    
-    if not dst.test_date(dst_df,index,threshold):      
-        eq_df_candidates=eq_df_candidates.drop(index)
- 
-# Need to select most powerful earthquake on given day
-
-       
+# =============================================================================
+# Create the hd5 for the earthquakes
+# =============================================================================
+#dst_mean=stat.mean(dst_df.dst)
+#dst_std=stat.pstdev(dst_df.dst)
+#
+#threshold=dst_mean-(2*dst_std)
+#
+#
+#eq_df_candidates=eq_df    
+#for index, eq in eq_df.iterrows():
+#    eq_date=datetime.datetime(index.year,index.month,index.day)
+#    
+#    if not dst.test_date(dst_df,index,threshold):      
+#        eq_df_candidates=eq_df_candidates.drop(index)
+# 
+## Need to select most powerful earthquake on given day
+#
+#       
 #for index, eq in eq_df_candidates.iterrows():
 #    
 #    eq_date=datetime.datetime(index.year,index.month,index.day)
-#    vlf.create_hdf5(-1,eq_date)
+#    date1=eq_date - datetime.timedelta(days=5)
+#    vlf.create_hdf5(date1,eq_date,"/Users/isaacmehigan/Documents/fyp/h5/kam_5day_auto/")
     
     
     

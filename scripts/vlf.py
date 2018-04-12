@@ -13,6 +13,7 @@ import re
 import datetime
 from time import strptime
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 def rename(folder):
@@ -80,7 +81,7 @@ def add_date_col(data,start_date):
     data2=data.set_index('time')
     return data2
 
-def create_hdf5(date1,date2):
+def create_hdf5(date1,date2,output_folder):
     """ Function to make a hdf5 for .kam data between 2 dates
     Also works if only 1 date is entered, this gives data 5 days before an EQ 
     """
@@ -88,12 +89,12 @@ def create_hdf5(date1,date2):
     folder="/Users/isaacmehigan/Documents/fyp/kam/data"
     if (type(date1) is datetime.datetime):
         print("2 arguments generating hdf5 for ",date1.strftime('%Y-%m-%d')," to ",date2.strftime('%Y-%m-%d'))
-        output_filename=(datetime.datetime.strftime(date2,'../output/%Y-%m-%d') +
+        output_filename=(datetime.datetime.strftime(date2,output_folder+'%Y-%m-%d') +
         datetime.datetime.strftime(date2,'_%Y-%m-%d.h5'))
     else:
         print("1 argument ",date2.strftime('%Y-%m-%d')," so generating data for 5 days before")
         date1=date2 - datetime.timedelta(days=5)
-        output_filename=datetime.datetime.strftime(date2,'../output/eq_%Y-%m-%d.h5')
+        output_filename=datetime.datetime.strftime(date2,output_folder+'eq_%Y-%m-%d.h5')
     
     date_0=datetime.datetime(2004,2,14) #set lowest date allowed
     date_n=datetime.datetime(2007,12,31) #set highest date allowed
@@ -114,6 +115,25 @@ def create_hdf5(date1,date2):
     output_df=pd.concat(output_df)
     num=len(output_df.index)
     output_df['num']=range(0,num)
-    output_night_df=output_df[date1:date2].between_time('18:00','8:00')
+    [sunrise,sunset]=get_nighttime(output_df)
+    output_night_df=output_df[date1:date2].between_time(sunset,sunrise) # was 18 - 8
     output_night_df.to_hdf(output_filename,'eq_df',format='table')
     print("File",output_filename.split("/")[-1],"was created")
+    
+    
+def get_nighttime(df):
+#    plt.figure(num=1, figsize=(5, 3))
+#    df['P_jjy'].plot()
+    sunrise=df['P_jjy'].between_time('01:00','12:00').idxmin()
+    sunrise=sunrise.replace(hour=sunrise.hour, minute=sunrise.minute, second=0)-datetime.timedelta(minutes=30)
+    sunset=df['P_jjy'].between_time('12:00','23:50').idxmin()
+    sunset=sunset.replace(hour=sunset.hour, minute=sunset.minute, second=0)+datetime.timedelta(minutes=20)
+    return [sunrise.time(),sunset.time()]
+#    buffer=datetime.timedelta(minutes=15)
+#    nighttime_df=df.between_time(sunset,sunrise)
+#    plt.figure(num=2, figsize=(5, 3))
+#    nighttime_df['P_jjy'].plot()
+#    print("here")
+    
+#create_hdf5(test_date3,test_date2,"/Users/isaacmehigan/Documents/fyp/h5/test/")
+    
