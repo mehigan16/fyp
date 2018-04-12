@@ -36,19 +36,21 @@ names = ["Logistic Regression","Nearest Neighbors", "Linear SVM", "RBF SVM", "Ga
          "Naive Bayes"] #, "QDA"]
 
 classifiers = [
-    LogisticRegression(C=1e5),
+    LogisticRegression(C=0.09),
     KNeighborsClassifier(3),
-    SVC(kernel="linear", C=0.025,probability=True),
-    SVC(gamma=2, C=1,probability=True),
+    SVC(kernel="linear", C=0.00016,probability=True),
+    SVC(gamma=2, C=0.0023,probability=True),
     GaussianProcessClassifier(1.0 * RBF(1.0)),
     DecisionTreeClassifier(max_depth=5),
     RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
-    MLPClassifier(alpha=1,max_iter=2000),
+    MLPClassifier(alpha=2500,max_iter=4000,hidden_layer_sizes=[10]),
     AdaBoostClassifier(),
     GaussianNB()]#,
     #QuadraticDiscriminantAnalysis()]
 
-D=np.loadtxt("earthquake_data.csv", delimiter=",")
+D=np.loadtxt("earthquake_data-auto.csv", delimiter=",")
+#D=np.loadtxt("earthquake_data-22-6.csv", delimiter=",")
+
 
 min_max_scaler = preprocessing.MinMaxScaler()
 D_scaled = min_max_scaler.fit_transform(D)
@@ -91,6 +93,7 @@ def compare_classifiers(n):
         auc_array=np.vstack([auc_array,auc_list])
         fpr_array=np.vstack([fpr_array,fpr_list])
         tpr_array=np.vstack([tpr_array,tpr_list])
+    return tpr_array,fpr_array,auc_array
 
 def loop_classifiers():
     for name, clf in zip(names, classifiers):
@@ -110,7 +113,7 @@ def loop_classifiers():
 
 def optimise(clf,var,runs,X_train, X_test, y_train, y_test):
     print("Started optimisation")
-    k_values=np.logspace(-4,5,runs)
+    k_values=np.logspace(-5,5,runs)
     auc_values=[]
     
     for k in k_values:
@@ -122,11 +125,11 @@ def optimise(clf,var,runs,X_train, X_test, y_train, y_test):
         auc_values.append(auc)
     
     mx,idx = max( (auc_values[i],i) for i in range(len(auc_values)) )
-    print("Initial search complete")
-    closest=k_values[idx]
+    closest=k_values[idx]    
     closest10=int(round(np.log10(closest)))
-
-    k_values=np.linspace(10**(closest10-1),10**(closest10+1),runs)
+    closest=round(k_values[idx],np.clip((-1*closest10)+1,0,5))
+    print("Initial search complete " + var + "=" + str(closest) + " gives auc = " + str(round(mx,4)))
+    k_values=np.linspace(10**(closest10-1),10**(closest10+1),4*runs)
     
     auc_values=[]
     
@@ -138,9 +141,15 @@ def optimise(clf,var,runs,X_train, X_test, y_train, y_test):
         auc=metrics.roc_auc_score(y_test, y_star)
         auc_values.append(auc)
     
-    mx,idx = max( (auc_values[i],i) for i in range(len(auc_values)) )
+    mx2,idx = max( (auc_values[i],i) for i in range(len(auc_values)) )
+    closest2=round(k_values[idx],np.clip((-1*closest10)+1,0,5))
+    print("Detailed search complete " + var + "=" + str(closest2) + " gives auc = " + str(round(mx2,4)))
+    if mx>mx2:
+        print("Initial value was better")
+        
+        return closest
     
-    return k_values[idx]
+    return closest2
 
 
 
@@ -167,10 +176,10 @@ def plot_curves(tpr_array,fpr_array,auc_array):
             tprs_lower = mean_tprs - std
             auc_mean=np.average(auc_array[:,i])
             
-            ax.plot(base_fpr, mean_tprs, 'b')
+            ax.plot(base_fpr, mean_tprs, 'b',label='Mean AUC = %0.2f'% auc_mean)
             ax.fill_between(base_fpr, tprs_lower, tprs_upper, color='grey', alpha=0.3)
             
-            ax.plot([0, 1], [0, 1],'r--',label='Mean AUC = %0.2f'% auc_mean)
+            ax.plot([0, 1], [0, 1],'r--')
             ax.legend(loc='lower right')
             ax.set_xlim([-0.01, 1.01])
             ax.set_ylim([-0.01, 1.01])
@@ -181,12 +190,14 @@ def plot_curves(tpr_array,fpr_array,auc_array):
             
         plt.tight_layout()
         plt.show()
-
-#A=optimise(classifiers[7],'alpha',20,X_train, X_test, y_train, y_test)        
-loop_classifiers()        
-        
-#plot_curves(tpr_array,fpr_array,auc_array)
-    
+#A=np.zeros(25)
+#for i in range(0,50):
+#    X_train, X_test, y_train, y_test =  train_test_split(X,Z,test_size=0.50)
+#    A[i]=optimise(classifiers[7],'alpha',50,X_train, X_test, y_train, y_test)        
+#loop_classifiers()        
+[tpr_array,fpr_array,auc_array]=compare_classifiers(50)       
+plot_curves(tpr_array,fpr_array,auc_array)
+#(u,s,vh)=np.linalg.svd(X) # Principle component analysis    
 #fpr_lengths=np.array([]).reshape(0,10)
 #tpr_lengths=np.array([]).reshape(0,10)
 #for l in range(0,20):
