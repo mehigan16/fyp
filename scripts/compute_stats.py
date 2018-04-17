@@ -50,6 +50,7 @@ def compute_stats(df):
 
 def select_values(df,eq_list):
     df['eq']=np.zeros(df.shape[0])
+    df['ctrl']=np.zeros(df.shape[0])
     df['taken']=np.zeros(df.shape[0])
     result_array=np.zeros(21)
     earthquake_dates=[]
@@ -57,13 +58,16 @@ def select_values(df,eq_list):
         eq_date=datetime.date(index.year,index.month,index.day)
         date1=eq_date - datetime.timedelta(days=5)
         candidate_df=df[date1:eq_date-datetime.timedelta(days=1)]
-        if (candidate_df.shape[0] == 5 and candidate_df[candidate_df['dst']>-50].shape[0]==5 and candidate_df['mean_mag_JJY'].isnull().sum()<1 and candidate_df['taken'].sum()<1):
-            candidate_df=candidate_df.drop(['dst', 'eq','taken'], axis=1)
+        if (candidate_df[candidate_df['dst']<-65].shape[0]==0 and candidate_df['mean_mag_JJY'].isnull().sum()<1 and candidate_df['eq'].sum()<10):
+            candidate_df=candidate_df.drop(['dst', 'eq','taken','ctrl'], axis=1)
             stats_list=candidate_df.values.flatten()[0:20]
             stats_list=np.hstack((stats_list,1)) # Add target data
             result_array = np.vstack((result_array, stats_list))
+            df.loc[date1:eq_date+datetime.timedelta(days=6), 'taken'] = 1
             df.loc[date1:eq_date+datetime.timedelta(days=6), 'eq'] = 1
-            df.loc[date1:eq_date, 'taken'] = 1
+        else:
+            print(str(eq_date) + ' Rejected: ' + str(candidate_df.shape[0])+ ' ' + str(candidate_df[candidate_df['dst']<-65].shape[0]) + ' ' + str(candidate_df['mean_mag_JJY'].isnull().sum()) + ' ' + str(candidate_df['eq'].sum()))
+            df.loc[date1:eq_date+datetime.timedelta(days=6), 'eq'] = 1
     
 # =============================================================================
 #     Now for control
@@ -74,14 +78,15 @@ def select_values(df,eq_list):
     while (i< num_eqs):
         r=randint(5,max_r)
         date2=df.index[r].date()
-        date1=df.index[r-6].date()
+        date1=df.index[r-5].date()
         candidate_ctrl=df[date1:date2]
-        if (candidate_ctrl.shape[0] == 7 and candidate_ctrl[candidate_ctrl['dst']>-50].shape[0]==7 and candidate_ctrl['mean_mag_JJY'].isnull().sum()<1 and candidate_ctrl['eq'].sum()<1):
-            candidate_ctrl=candidate_ctrl.drop(['dst', 'eq','taken'], axis=1)
+        if (candidate_ctrl.shape[0] == 6 and candidate_ctrl[candidate_ctrl['dst']>-65].shape[0]==6 and candidate_ctrl['mean_mag_JJY'].isnull().sum()<1 and candidate_ctrl['taken'].sum()<1):
+            candidate_ctrl=candidate_ctrl.drop(['dst', 'eq','taken','ctrl'], axis=1)
             stats_list=candidate_ctrl.values.flatten()[0:20]
             stats_list=np.hstack((stats_list,0)) # Add target data
             result_array = np.vstack((result_array, stats_list))
-            df.loc[date1:date2, 'eq'] = 1
+            df.loc[date1:date2, 'ctrl'] = 1
+            df.loc[date1:date2, 'taken'] = 1
             i=i+1
             print(i)
     result_array=result_array[1:,:]
@@ -100,6 +105,8 @@ df_Stat2=pd.read_hdf("/Users/isaacmehigan/Documents/fyp/h5/mean_disp_dst.h5")
 
 
 df,D=select_values(df_Stat2,eq_df)
+
+D2=df.drop(['taken','ctrl'], axis=1).dropna().as_matrix(columns=None)
 #np.savetxt(output_dir+"earthquake_data-corrected.csv", D, delimiter=",")
 #df_Stat2=compute_stats(df)
 
